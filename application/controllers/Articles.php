@@ -89,7 +89,7 @@ class Articles extends CI_Controller
 		redirect(base_url());
 	}
 	
-	public function delete_all($id)
+	public function delete_all()
 	{
 		$this->articles_model->delete_all();
 		redirect('articles');

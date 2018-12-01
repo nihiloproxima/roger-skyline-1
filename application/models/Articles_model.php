@@ -62,6 +62,6 @@ class Articles_model extends CI_Model
 
 	public function delete_all()
 	{
-		$this->db->delete('Articles');
+		$this->db->query('DELETE * FROM Articles');
 	}
 }
