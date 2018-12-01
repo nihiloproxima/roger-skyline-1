@@ -1,1 +1,1 @@
-cd /var/www/html/roger-skyline && git pull
+cd /var/www/html/rogerskyline && git pull
