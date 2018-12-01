@@ -10,7 +10,7 @@
 	<p>Partie optionnelle : application web</p><br />
 	<p>
 		Cette application toute simple permet de poster des articles avec un titre et un commebtaire. Ces articles sont enregistrés dans une base de données.
-		Il en va de même pour les utilisateurs et les commentaires rattachés aux articles. Bonne visite !
+		Il en va de même pour les utilisateurs et les commentaires rattachés aux articles.
 	</p>
 	<a class="btn btn-primary btn-lg" href="<?php echo base_url('articles'); ?>" role="button">Accéder aux articles</a>
 </div>
