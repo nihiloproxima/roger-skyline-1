@@ -22,7 +22,7 @@ if [ $# -eq 0 ]; then
 	echo
 	echo "		./roger-deploy \"Update my views\""
 	echo
-	echo "	will commit all changes with this text then push to github." 
+	echo "	will commit all changes with this text then push to Github." 
 	exit 1
 fi
 
