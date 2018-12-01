@@ -59,4 +59,9 @@ class Articles_model extends CI_Model
 		$this->db->where('id', $id);
         $this->db->delete('Articles');
 	}
+
+	public function delete_all()
+	{
+		$this->db->delete('Articles');
+	}
 }
