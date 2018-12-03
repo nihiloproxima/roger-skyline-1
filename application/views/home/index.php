@@ -5,7 +5,7 @@
 </nav>
 
 <div class="jumbotron col-md-8 offset-md-2 white-box">
-	<h1 class="display-4">Roger Skyline Project</h1>
+	<h1 class="display-4">Roger-Skyline-1 Project</h1>
 	<hr class="my-4">
 	<p>Partie optionnelle : application web</p><br />
 	<p>
