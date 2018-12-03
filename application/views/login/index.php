@@ -13,7 +13,7 @@
 
 	        <div class="input-group">
 				<div class="input-group-append">
-		            <span class="input-group-text">Mot de passe</span>
+		            <span class="input-group-text">Password</span>
 		        </div>
 				<input name="password" class="form-control" type="password">
 	        </div>
