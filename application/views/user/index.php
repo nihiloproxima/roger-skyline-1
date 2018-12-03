@@ -6,11 +6,11 @@
 	<h4 class=" col-md-2 offset-md-1 text-center"><?php echo $this->session->username ?></h4>
 </div>
 
-<h3 class="offset-md-1">Articles de <?php echo $this->session->usermame ?></h3>
+<h3 class="offset-md-2">Articles de <?php echo $this->session->usermame ?></h3>
 
 <?php if (! empty($articles)) { foreach ($articles as $articles_item): ?>
 
-<div class="col-md-7 offset-md-2 article-box">
+<div class="col-md-8 offset-md-2 article-box">
 	<p>
 		<?php
 			$pseudo = $this->db->where('id', $articles_item['user_id'])
