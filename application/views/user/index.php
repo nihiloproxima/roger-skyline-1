@@ -1,4 +1,4 @@
-<div class="col-md-8 offset-md-2 white-box">
+<div class="col-md-8 offset-md-2 article-box">
 
     <h2 class="title"><?php echo $title ?></h2>
 
