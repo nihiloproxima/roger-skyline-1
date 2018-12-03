@@ -10,8 +10,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.4.2/css/all.css" integrity="sha384-/rXc/GQVaYpyDdyxK+ecHPVYJSN9bmVFBvjA/9eOB+pb3F2w2N6fc5qB9Ew5yIns" crossorigin="anonymous">
-    <link rel="icon" href="<?=base_url()?>/favicon.png" type="image/gif">
-    <link rel="icon" href="<?=base_url()?>/favicon.png" type="image/gif">
+    <link rel="icon" href="<?=base_url()?>assets/favicon.png" type="image/gif">
     <link rel="stylesheet" href="<?php echo base_url(); ?>assets/css/auth.css" type="text/css"/>
 </head>
 
