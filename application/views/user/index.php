@@ -37,3 +37,6 @@
 </div><br />
 
 <?php endforeach; }?>
+<?php if (empty($articles))
+	echo "<p>Cet utilisateur n'a pas encore publié d'articles.</p>";
+?>
