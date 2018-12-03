@@ -15,6 +15,8 @@ class User extends CI_Controller
 	{
 
 		$data['title'] = 'Mon profil';
+		
+		$data['articles'] = $this->articles_model->get_user_articles($this->session->id);
 
 		$this->load->view('templates/header', $data);
 		$this->load->view('user/index.php', $data);

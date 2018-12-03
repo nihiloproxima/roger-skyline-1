@@ -64,4 +64,25 @@ class Articles_model extends CI_Model
 	{
 		$this->db->query('DELETE * FROM Articles');
 	}
+
+	public function get_user_articles($user_id = FALSE)
+    {
+        if ($id === FALSE)
+        {
+            $query = $this->db->get('Articles');
+            return $query->result_array();
+        }
+
+        $query = $this->db->where('user_id', $user_id)
+                            ->get('Articles');
+
+        if ($query->num_rows() > 0) // Retourne les articles s'ils existent
+        {
+            return $query->result_array();
+        }
+        else
+        {
+            return FALSE;
+        }
+    }
 }
