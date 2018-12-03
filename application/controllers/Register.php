@@ -55,9 +55,7 @@ class Register extends CI_Controller
 			$query = $this->register_model->create();
 			if ($query != FALSE)
 			{
-				$this->load->view('templates/header_offline', $data);
-				$this->load->view('register/success');
-				$this->load->view('templates/footer');
+				redirect(base_url());
 			}
 		}
 	}
