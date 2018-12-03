@@ -8,7 +8,7 @@
 
 <h3 class="offset-md-1">Articles de <?php echo $this->session->usermame ?></h3>
 
-<?php foreach ($articles as $articles_item): ?>
+<?php if (! empty($articles)) { foreach ($articles as $articles_item): ?>
 
 <div class="col-md-7 offset-md-2 article-box">
 	<p>
@@ -36,4 +36,4 @@
 	</span>
 </div><br />
 
-<?php endforeach; ?>
+<?php endforeach; }?>
