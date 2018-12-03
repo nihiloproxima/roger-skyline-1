@@ -22,7 +22,7 @@ if [ $# -eq 0 ]; then
 	echo
 	echo "		./roger-deploy \"Update my views\""
 	echo
-	echo "	will commit all changes with this text then push to Github." 
+	echo "	will commit all changes with this text then push it to Github." 
 	exit 1
 fi
 
@@ -32,6 +32,7 @@ if [ $# -eq 1 ]; then
 	git push
 	echo "Git repository updated. Now running update on server."
 	ssh nathan@192.168.56.3 -p 2222 'bash -s' < update_server.sh
+	echo " Done. The server has been updated."
 	exit 0
 fi
 
