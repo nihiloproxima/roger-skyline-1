@@ -13,7 +13,7 @@ class User extends CI_Controller
 
 	public function index()
 	{
-
+		$this->load->model('articles_model');
 		$data['title'] = 'Mon profil';
 		
 		$data['articles'] = $this->articles_model->get_user_articles($this->session->id);
