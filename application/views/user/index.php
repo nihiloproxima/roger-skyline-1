@@ -3,10 +3,10 @@
     <h2 class="title"><?php echo $title ?></h2>
 
     <img class="rounded col-md-2 offset-md-1" src="https://www.qualiscare.com/wp-content/uploads/2017/08/default-user.png" alt="profil_pic"/>
-	<h4 class=" col-md-2 offset-md-1 text-center"><?php echo $this->session->username ?></h4>
+	<h5 class=" col-md-2 offset-md-1 text-center"><?php echo $this->session->username ?></h5>
 </div>
-
-<h3 class="offset-md-2">Articles de cet utilisateur :</h3>
+<br />
+<h4 class="offset-md-2">Articles de cet utilisateur :</h4>
 
 <?php if (! empty($articles)) { foreach ($articles as $articles_item): ?>
 
