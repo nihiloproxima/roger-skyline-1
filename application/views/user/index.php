@@ -38,5 +38,5 @@
 
 <?php endforeach; }?>
 <?php if (empty($articles))
-	echo "<p>Cet utilisateur n'a pas encore publié d'articles.</p>";
+	echo "<p class=\"co-md-8 offset-md-2\">Cet utilisateur n'a pas encore publié d'articles.</p>";
 ?>
