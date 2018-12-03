@@ -67,7 +67,7 @@ class Articles_model extends CI_Model
 
 	public function get_user_articles($user_id = FALSE)
     {
-        if ($id === FALSE)
+        if ($user_id === FALSE)
         {
             $query = $this->db->get('Articles');
             return $query->result_array();
