@@ -13,7 +13,7 @@
 		Il en va de même pour les utilisateurs et les commentaires rattachés aux articles.<br />
 	</p>
 	<p>
-		Phpmyadmin disponible à <a href="https://192.168.56.3/phpmyadmin" target="blank">cette addresse</a>. Bonne visite.	<br />
+		Phpmyadmin disponible à <a href="https://192.168.56.3/phpmyadmin" target="blank">cette addresse</a>.<br />
 	</p>
 	<a class="btn btn-primary btn-lg" href="<?php echo base_url('articles'); ?>" role="button">Accéder aux articles</a>
 </div>
