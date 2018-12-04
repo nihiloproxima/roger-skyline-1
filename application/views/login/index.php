@@ -6,14 +6,14 @@
         <div class="input-group mb-3">
 			
 	        <div class="input-group-prepend">
-	            <span class="input-group-text" id="basic-addon1">Adresse email</span>
+	            <span class="input-group-text" id="basic-addon1">Email</span>
 	        </div>
 	        <input type="input" name="email" type="email" class="form-control">
 	    </div>
 
 	        <div class="input-group">
 				<div class="input-group-append">
-		            <span class="input-group-text">Password</span>
+		            <span class="input-group-text">Mot de passe</span>
 		        </div>
 				<input name="password" class="form-control" type="password">
 	        </div>
