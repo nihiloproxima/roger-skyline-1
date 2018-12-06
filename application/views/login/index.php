@@ -6,7 +6,7 @@
         <div class="input-group mb-3">
 			
 	        <div class="input-group-prepend">
-	            <span class="input-group-text" id="basic-addon1">Addresse email</span>
+	            <span class="input-group-text" id="basic-addon1">Email</span>
 	        </div>
 	        <input type="input" name="email" type="email" class="form-control">
 	    </div>
