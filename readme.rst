@@ -1,70 +1,267 @@
-###################
-What is CodeIgniter
-###################
+Roger-Skyline
+Ou Comment Boire Des Shots Sans Se Salir
 
-CodeIgniter is an Application Development Framework - a toolkit - for people
-who build web sites using PHP. Its goal is to enable you to develop projects
-much faster than you could if you were writing code from scratch, by providing
-a rich set of libraries for commonly needed tasks, as well as a simple
-interface and logical structure to access these libraries. CodeIgniter lets
-you creatively focus on your project by minimizing the amount of code needed
-for a given task.
+PARTIE 1 : Creation de la VM
+Créer une machine debian de taille fixe de 8gb
 
-*******************
-Release Information
-*******************
+Installer debian
 
-This repo contains in-development code for future releases. To download the
-latest stable release please visit the `CodeIgniter Downloads
-<https://codeigniter.com/download>`_ page.
+Creer une partition de 4.2Gb (en creation, creer une de 4.501gb), une de 1gb (swap) et une derniere du reste de la taille
 
-**************************
-Changelog and New Features
-**************************
+/!\ Installer seulement service ssh et usuels
 
-You can find a list of all changes for each release in the `user
-guide change log <https://github.com/bcit-ci/CodeIgniter/blob/develop/user_guide_src/source/changelog.rst>`_.
+PARTIE 2 : Jusqu'au ssh
+apt install -y vim sudo net-tools iptables-persistent fail2ban sendmail apache2
 
-*******************
-Server Requirements
-*******************
+vim /etc/ssh/sshd_config -> modification du port en 2222 + decomenter PasswordAuthentification yes
 
-PHP version 5.6 or newer is recommended.
+adduser USER sudo
 
-It should work on 5.3.7 as well, but we strongly advise you NOT to run
-such old versions of PHP, because of potential security and performance
-issues, as well as missing features.
+Arreter la machine
 
-************
-Installation
-************
+Dans VirtualBox -> selectioner la machine -> network -> adapter2 -> hostonly -> ( vboxnet() : en dhcp )
 
-Please see the `installation section <https://codeigniter.com/user_guide/installation/index.html>`_
-of the CodeIgniter User Guide.
+Redemarrer la machine
 
-*******
-License
-*******
+vim /etc/network/interfaces
 
-Please see the `license
-agreement <https://github.com/bcit-ci/CodeIgniter/blob/develop/user_guide_src/source/license.rst>`_.
+Configurer en dhcp le enp0s8
 
-*********
-Resources
-*********
+ifconfig -> recuperer IP
 
--  `User Guide <https://codeigniter.com/docs>`_
--  `Language File Translations <https://github.com/bcit-ci/codeigniter3-translations>`_
--  `Community Forums <http://forum.codeigniter.com/>`_
--  `Community Wiki <https://github.com/bcit-ci/CodeIgniter/wiki>`_
--  `Community Slack Channel <https://codeigniterchat.slack.com>`_
+vim /etc/network/interfaces
 
-Report security issues to our `Security Panel <mailto:security@codeigniter.com>`_
-or via our `page on HackerOne <https://hackerone.com/codeigniter>`_, thank you.
+Modification de enp0s8
 
-***************
-Acknowledgement
-***************
+dhcp -> static
+address <adresse recupérée>
+netmask 255.255.255.252
+reboot
 
-The CodeIgniter team would like to thank EllisLab, all the
-contributors to the CodeIgniter project and you, the CodeIgniter user.
+Sur iterm -> ssh_keygen -> copier .ssh/id_rsa.pub
+
+ssh user@IPMACHINE -p 2222
+mkdir .ssh
+cd .ssh
+echo "CE QUI EST COPIÉ" > authorized_keys
+vim /etc/ssh/sshd_config -> * PasswordAuthentification no *
+Redemarrer la machine, dans Virtualbox -> file -> host.... -> decocher DHCP
+
+PARTIE 3 : Firewall
+iptables -L
+Ajouter fichier /etc/network/if-pre-up.d/iptables
+
+Dans ce fichier :
+
+#!/bin/bash
+
+iptables-restore < /etc/iptables.test.rules
+
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+
+iptables -P INPUT DROP
+
+iptables -P OUTPUT DROP
+
+iptables -P FORWARD DROP
+
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A INPUT -p tcp -i enp0s8 --dport 2222 -j ACCEPT
+
+iptables -A INPUT -p tcp -i enp0s8 --dport 80 -j ACCEPT
+
+iptables -A INPUT -p tcp -i enp0s8 --dport 443 -j ACCEPT
+
+iptables -A OUTPUT -m conntrack ! --ctstate INVALID -j ACCEPT
+
+iptables -I INPUT -i lo -j ACCEPT
+
+iptables -A INPUT -j LOG
+
+iptables -A FORWARD -j LOG
+
+iptables -I INPUT -p tcp --dport 80 -m connlimit --connlimit-above 10 --connlimit-mask 20 -j DROP
+
+exit 0
+chmod+x sur ce fichier
+
+PARTIE 4 : DOS
+sudo touch /var/log/apache2/server.log
+vim /etc/fail2ban/jail.local
+
+[DEFAULT]
+destemail = USER@student.le-101.fr
+sender = root@roger-skyline.fr
+
+[sshd]
+port = 2222
+enabled = true
+maxretry = 5
+findtime = 120
+bantime = 60
+
+[sshd-ddos]
+port = 2222
+enabled = true
+
+[recidive]
+enabled = true
+
+[apache]
+enabled = true
+port = http, https
+filter = apache-auth
+logpath = /var/log/apache2*/*error.log
+maxretry = 6
+findtime = 600
+
+[apache-noscript]
+enabled = true
+
+[apache-overflows]
+
+enabled  = true
+port     = http,https
+filter   = apache-overflows
+logpath  = /var/log/apache2*/*error.log
+maxretry = 2
+
+[apache-badbots]
+
+enabled  = true
+port     = http,https
+filter   = apache-badbots
+logpath  = /var/log/apache2*/*error.log
+maxretry = 2
+
+[http-get-dos]
+enabled = true
+port = http,https
+filter = http-get-dos
+logpath = /var/log/apache2/server.log
+maxretry = 100
+findtime = 300
+bantime = 300
+action = iptables[name=HTTP, port=http, protocol=tcp]
+
+Puis créer le fichier suivant :
+
+sudo vim /etc/fail2ban/filter.d/http-get-dos.conf et y mettre le contenu suivant :
+
+[Definition]
+
+# Option: failregex
+# Note: This regex will match any GET entry in your logs, so basically all valid and not valid entries are a match.
+# You should set up in the jail.conf file, the maxretry and findtime carefully in order to avoid false positives.
+
+failregex = ^<HOST> -.*"(GET|POST).*
+
+# Option: ignoreregex
+# Notes.: regex to ignore. If this regex matches, the line is ignored.
+# Values: TEXT
+#
+ignoreregex =
+Relancer le service fail2ban : sudo systemctl restart fail2ban.service
+
+Si pas d'erreur, tout va bien, un iptables -L liste désormais toutes les règles activées.
+
+PARTIE 5 : scan des ports
+Fait automatiquement par le Firewall -> seul les ports ssh et web sont visibles
+
+PARTIE 6 : services inutiles
+service --status-all
+
+apt remove <services inutiles>
+
+systemctl list-unit-files
+
+systemctl disable <services inutiles>
+PARTIE 7 : script d'update
+vim /home/USER/update_script.sh
+
+#! /bin/bash
+apt-get update && apt-get upgrade
+chmod +x update_script.sh
+
+vim crontab (dans /etc) et ajouter avant le dernier #
+
+0 4	* * 1	root	/home/USER/update_script.sh  >> /var/log/update_script.log
+@reboot	root	/home/USER/update_script.sh  >> /var/log/update_script.log
+PARTIE 8 : Script de surveillance
+cp /etc/crontab /home/USER/tmp
+
+vim /home/USER/email.txt Remplir le contenu du fichier email.txt avec le message que vous souhaitez
+
+vim /home/USER/watch_script.sh
+
+#!/bin/bash
+cat /etc/crontab > /home/USER/new
+DIFF=$(diff new tmp)
+if [ "$DIFF" != "" ]; then
+	sudo sendmail ROOT@MAIL.com < /home/USER/email.txt
+	rm -rf /home/USER/tmp
+	cp /home/USER/new /home/USER/tmp
+fi
+chmod +x watch_script.sh
+
+vim /etc/crontab -> ajouter avant le dernier #
+
+0  0	* * *	root	/home/USER/watch_script.sh
+PARTIE 9 : Partie web
+Générer une clé SSL :
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/roger-skyline.com.key -out /etc/ssl/certs/roger-skyline.com.crt
+Rentrer les infos quand demandées.
+
+Puis : sudo vim /etc/apache2/sites-available/default-ssl.conf
+
+Et modifier uniquement les lignes SSL en renseignant le bon chemin des clés :
+
+<IfModule mod_ssl.c>
+ <VirtualHost _default_:443>       
+                ServerAdmin webmaster@localhost
+                DocumentRoot /var/www/html
+
+                ErrorLog ${APACHE_LOG_DIR}/error.log
+                CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+                #Include conf-available/serve-cgi-bin.conf
+
+                #   SSL Engine Switch:
+                #   Enable/Disable SSL for this virtual host.
+                SSLEngine on
+                SSLCertificateFile      /etc/ssl/certs/roger-skyline.com.crt
+                SSLCertificateKeyFile /etc/ssl/private/roger-skyline.com.key
+                #
+                #SSLCertificateFile      /etc/ssl/certs/ssl-cert-snakeoil.pem
+                #SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+
+......................
+.......................
+
+ </VirtualHost>
+</IfModule>
+Puis tester les commandes suivantes :
+
+sudo apachectl configtest
+sudo a2enmod ssl
+sudo a2ensite default-ssl
+Si pas de message d'erreur, on peut redémarrer le service : sudo systemctl restart apache2.service
+
+Dans ce fichier, modifier le document root vers /var/www/site
+
+a2dissite 000-default.conf
+a2ensite 001-site.conf
+systemctl reload apache2
+Le site sera accessible sur votre IP (https://192.168.56.3), c'est un certificat auto signé donc le navigateur met une alerte, c'est normal !
+
+Vous pouvez mettre les fichiers de votre site dans le dossier /var/www/html !
+
+PARTIE 10 : Partie deploiement
+SWAG IT PUSH
