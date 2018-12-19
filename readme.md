@@ -14,9 +14,12 @@ Créez une machine debian de taille fixe de 8gb avec VirtualBox.
 
 Installez l'image prédémment téléchargée de debian.
 
-Avant de lancer la machine virtuelle. Dans VirtualBox, allez dans le gestionnaire de réseau de l'hôte (files->Host Network Manager ou CMD+W). Cliquez sur créer, puis décochez le serveur DHCP. Vous devriez avoir un hôte vboxnet0 avec l'ip 192.168.56.1/24.
+Avant de lancer la machine virtuelle. Dans VirtualBox, allez dans le gestionnaire de réseau de l'hôte (files->Host Network Manager ou CMD+W). 
+Cliquez sur créer, puis décochez le serveur DHCP. Vous devriez avoir un hôte vboxnet0 avec l'ip 192.168.56.1/24.
 
-Allez dans les paramètres de la machine Debian créée précedemment. Settings->network. Pour la carte 1, laissez le mode d'accès en NAT, puis activez la carte 2 en mode "Réseau hôte privé". Il sera par défaut sur vboxnet0, laissez comme ça !
+Allez dans les paramètres de la machine Debian créée précedemment : Settings->network. 
+Pour la carte 1, laissez le mode d'accès en NAT, puis activez la carte 2 en mode "Réseau hôte privé". 
+Il sera par défaut sur vboxnet0.
 
 Vous pouvez démarrer la VM.
 
@@ -26,11 +29,12 @@ Créez une partition de 4.2Gb (en creation, creer une de *4.501gb*) avec / en mo
 
 Puis une partition de de 1gb de type swap et enfin avec le reste du disque dur, faites une partition /home.
 
-/!\ N'nstallez seulement que les services ssh et usuels (pas web ni environnement de bureau)
+/!\ N'installez seulement que les services ssh et usuels (pas web ni environnement de bureau)
 
 ## PARTIE 2 : Jusqu'au ssh
 
 Installez les packages nécessaires à Roger-Skyline :
+
 ```apt install -y vim sudo net-tools iptables-persistent fail2ban sendmail apache2```
 
 Puis modifiez les paramètres ssh :
@@ -78,40 +82,40 @@ Entrez les infos puis ajoutez le au groupe sudo :
 Redémarrez maintenant la machine : ```reboot```
 
 Dans un terminal de votre host, générez une clé ssh publique :
+
 ```ssh-keygen``` 
+
 Puis ```cat ~/.ssh/id_rsa.pub``` et copiez le contenu en entier.
 
 Connectez vous mainteant à votre machine :
 
-```
-ssh user@IPMACHINE -p 2222
-```
+```ssh user@IPMACHINE -p 2222```
+
 Entrez le mot de passe (obligatoire la première fois) et créez le dossier .ssh dans le home de votre utilsiateur :
-```
-mkdir .ssh
-```
+
+```mkdir .ssh```
+
 Collez ensuite la clé dans ```.ssh/authorized_keys```
 
 Puis modifiez à nouveau le fichier de configuration ssh :
+
 ```sudo vim /etc/ssh/sshd_config``` et passez "PasswordAuthentification yes" à no.
 
 Relancez le service ssh : ```sudo service ssh restart```
 
 Sortez du ssh avec ```exit``` et retentez une connexion avec la commande prédédente. La connexion se fait désormais sans mot de passe avec les PublicKeys. Vous retrouverez votre VM dans le fichier .ssh/known_hosts.
 
-
 ## PARTIE 3 : Firewall
 
 La partie Firewall se fait via des règles iptables.
 Vous pouvez lister les règles existentes avec :
 
-```
-sudo iptables -L
-```
+```sudo iptables -L```
 
 Il n'y a pour l'instant aucune règles. Ajoutez donc le fichier ```sudo vim /etc/network/if-pre-up.d/iptables```
 
 Dans ce fichier ajoutez les lignes suivantes : 
+
 ```
 #!/bin/bash
 
@@ -155,19 +159,18 @@ Puis rendez ce fichier executable.
 
 ```sudo chmod+x /etc/network/if-pre-up.d/iptables```
 
-Les règles iptables sont remises à zéro à chaque reboot. Ce fichier permettra au packet iptables-persistent de charger vos règles à chaque redémarrage. Modifiez le port 2222 par le port de votre ssh.
+Les règles iptables sont remises à zéro à chaque reboot. 
+Ce fichier permettra au packet iptables-persistent de charger vos règles à chaque redémarrage. 
+Modifiez le port 2222 par le port de votre ssh.
 
 
 ## PARTIE 4 : DOS
 
 Créez un fichier de log pour votre serveur Apache.
 
-```
-sudo touch /var/log/apache2/server.log
-```
+```sudo touch /var/log/apache2/server.log```
 
 Le packet fail2ban intègre des protections contre les attaques courantes. Il suffit de les activer en créant un fichier de configuration local. Cela permet de ne pas modifier directement les jails par défaut de jail.conf.
-
 
 ```sudo vim /etc/fail2ban/jail.local```
 
@@ -228,7 +231,6 @@ maxretry = 100
 findtime = 300
 bantime = 300
 action = iptables[name=HTTP, port=http, protocol=tcp]
-
 ```
 
 Créez également le fichier suivant :
@@ -253,7 +255,7 @@ ignoreregex =
 
 Relancer ensuite le service fail2ban : ```sudo systemctl restart fail2ban.service```
 
-Si pas d'erreur, tout va bien, un ```iptables -L``` liste désormais de nouvelles règles en plus des prédédentes.
+Si pas d'erreur, tout va bien. Un ```iptables -L``` liste désormais de nouvelles règles en plus des prédédentes.
 
 ## PARTIE 5 : scan des ports
 
@@ -283,7 +285,7 @@ Rendez le exécutable :
 
 ```chmod +x update_script.sh```
 
-Puis ajoutez le dans ```sudo vim /etc/crontab```
+Puis ajoutez le dans ```sudo vim /etc/crontab``` :
 
 ```
 0 4	* * 1	root	/home/USER/update_script.sh  >> /var/log/update_script.log
@@ -327,20 +329,21 @@ Ajoutez le ensuite à votre crontab :
 0  0	* * *	root	/home/USER/watch_script.sh
 ```
 
+Le mail sera envoyé à l'adresse renseignée.
+
 ## PARTIE 9 : Partie web
 
 Générez une nouvelle clé SSL :
 
-```
-sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/roger-skyline.com.key -out /etc/ssl/certs/roger-skyline.com.crt
-```
+```sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/roger-skyline.com.key -out /etc/ssl/certs/roger-skyline.com.crt```
 
 Rentrez les infos quand demandées.
 
 Puis : 
+
 ```sudo vim /etc/apache2/sites-available/default-ssl.conf```
 
-Et modifier uniquement les lignes SSL en renseignant le bon chemin des clés (les deux lignes sous SSLEngine on) :
+Et modifiez uniquement les lignes SSL en renseignant le bon chemin des clés (les deux lignes sous SSLEngine on) :
 
 ```
 <IfModule mod_ssl.c>
@@ -369,7 +372,7 @@ Et modifier uniquement les lignes SSL en renseignant le bon chemin des clés (le
 </IfModule>
 ```
 
-Puis tester les commandes suivantes :
+Puis testez les commandes suivantes :
 
 ```
 sudo apachectl configtest
@@ -378,23 +381,30 @@ sudo a2ensite default-ssl
 ```
 
 Si pas de message d'erreur, on peut redémarrer le service :
+
 ```sudo systemctl restart apache2.service```
 
-Faites une copie de la page par défaut :
+Faites ensuite une copie de la configuration par défaut :
+
 ```sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/001-default.conf```
 
-Et modifiez le fichier ```sudo vim /etc/apache2/sites-available/000-default.conf```
+Et modifiez le fichier ```sudo vim /etc/apache2/sites-available/001-default.conf```
+
 Changez le ServerName par ce que vous voulez et le DocumentRoot par le chemin vers votre site web.
 
-Activez ce fichier de configuration :
+Activez la nouvelle configuration :
 
 ```
+# Désactive l'ancienne configuration
 a2dissite 000-default.conf
+# Active la nouvelle
 a2ensite 001-site.conf
+# La commande parle d'elle-même...
 systemctl reload apache2
 ```
 
-Le site sera normalement accessible sur votre IP (https://192.168.56.3), c'est un certificat auto signé donc le navigateur vous mettra un avertissement avant d'y accéder.
+Le site sera normalement accessible sur votre IP (https://192.168.56.3). 
+C'est un certificat auto signé donc le navigateur vous mettra un avertissement avant d'y accéder.
 
 Vous pouvez mettre les fichiers de votre site dans le dossier /var/www/html si vous n'avez pas changé le DocumentRoot.
 
