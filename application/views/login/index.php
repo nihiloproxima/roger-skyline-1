@@ -13,13 +13,13 @@
 
 	        <div class="input-group">
 				<div class="input-group-append">
-		            <span class="input-group-text">Mot de passe</span>
+		            <span class="input-group-text">Password</span>
 		        </div>
 				<input name="password" class="form-control" type="password">
 	        </div>
 	        <br />
 	        <div>
-				<span>Mot de passe <a href="#">oublié ?</a></span>
+				<span>Mot de passe  <a href="#">oublié ?</a></span>
 	        </div>
 			<p><a href="<?php echo base_url('register');?>">Je n'ai pas de compte</a></p>
 
