@@ -1,6 +1,8 @@
 # Roger-Skyline
 
-Ou Comment Boire Des Shots Sans Se Salir
+Tutoriel pour le projet Roger-Skyline.
+
+Contributeurs : Ftourret, Fleonard, Naplouvi
 
 
 ## PARTIE 1 : Creation de la VM
