@@ -4,68 +4,114 @@ Ou Comment Boire Des Shots Sans Se Salir
 
 
 ## PARTIE 1 : Creation de la VM
-Créer une machine debian de taille fixe de 8gb
 
-Installer debian
+Téléchargez l'image Debian officielle :
+```
+https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-9.6.0-amd64-netinst.iso
+```
 
-Creer une partition de 4.2Gb (en creation, creer une de *4.501gb*), une de 1gb (swap) et une derniere du reste de la taille
+Créez une machine debian de taille fixe de 8gb avec VirtualBox.
 
-/!\ Installer seulement service ssh et usuels
+Installez l'image prédémment téléchargée de debian.
+
+Avant de lancer la machine virtuelle. Dans VirtualBox, allez dans le gestionnaire de réseau de l'hôte (files->Host Network Manager ou CMD+W). Cliquez sur créer, puis décochez le serveur DHCP. Vous devriez avoir un hôte vboxnet0 avec l'ip 192.168.56.1/24.
+
+Allez dans les paramètres de la machine Debian créée précedemment. Settings->network. Pour la carte 1, laissez le mode d'accès en NAT, puis activez la carte 2 en mode "Réseau hôte privé". Il sera par défaut sur vboxnet0, laissez comme ça !
+
+Vous pouvez démarrer la VM.
+
+A l'installation :
+
+Créez une partition de 4.2Gb (en creation, creer une de *4.501gb*) avec / en mountpoint.
+
+Puis une partition de de 1gb de type swap et enfin avec le reste du disque dur, faites une partition /home.
+
+/!\ N'nstallez seulement que les services ssh et usuels (pas web ni environnement de bureau)
 
 ## PARTIE 2 : Jusqu'au ssh
+
+Installez les packages nécessaires à Roger-Skyline :
 ```apt install -y vim sudo net-tools iptables-persistent fail2ban sendmail apache2```
 
-```vim /etc/ssh/sshd_config``` -> modification du port en 2222 + decomenter PasswordAuthentification yes
+Puis modifiez les paramètres ssh :
 
-```adduser USER sudo```
+```vim /etc/ssh/sshd_config```
 
-Arreter la machine
+Modification du port en 2222 (ou autre mais restez cohérents dans le reste du projet) puis décommentez la ligne PasswordAuthentification yes.
+Décommentez #PermitRootLogin prohibit-password et remplacez par No.
+Décommentez #PubkeyAuthentication yes
 
-
-Dans VirtualBox -> selectioner la machine -> network -> adapter2 -> hostonly -> ( vboxnet() : en dhcp )
-
-Redemarrer la machine
-
+Créez maintenant une nouvelle interface réseau qui fera le lien entre votre machine et votre host.
 
 ```vim /etc/network/interfaces```
 
-Configurer en dhcp le enp0s8
+Et ajoutez le contenu suivant : 
 
-ifconfig -> recuperer IP
-
-```vim /etc/network/interfaces```
-
-Modification de enp0s8
 ```
-dhcp -> static
-address <adresse recupérée>
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug enp0s3
+iface enp0s3 inet dhcp
+
+allow-hotplug enp0s8
+iface enp0s8 inet static
+address 192.168.56.3
 netmask 255.255.255.252
 ```
 
-```reboot```
+Créez maintenant un nouvel utilisateur :
 
+```adduser username```
 
-Sur iterm -> ssh_keygen -> copier .ssh/id_rsa.pub
+Entrez les infos puis ajoutez le au groupe sudo :
+
+```adduser username sudo```
+
+Redémarrez maintenant la machine : ```reboot```
+
+Dans un terminal de votre host, générez une clé ssh publique :
+```ssh-keygen``` 
+Puis ```cat ~/.ssh/id_rsa.pub``` et copiez le contenu en entier.
+
+Connectez vous mainteant à votre machine :
 
 ```
 ssh user@IPMACHINE -p 2222
-mkdir .ssh
-cd .ssh
-echo "CE QUI EST COPIÉ" > authorized_keys
-vim /etc/ssh/sshd_config -> * PasswordAuthentification no *
 ```
+Entrez le mot de passe (obligatoire la première fois) et créez le dossier .ssh dans le home de votre utilsiateur :
+```
+mkdir .ssh
+```
+Collez ensuite la clé dans ```.ssh/authorized_keys```
 
-Redemarrer la machine, dans Virtualbox -> file -> host.... -> decocher DHCP
+Puis modifiez à nouveau le fichier de configuration ssh :
+```sudo vim /etc/ssh/sshd_config``` et passez "PasswordAuthentification yes" à no.
+
+Relancez le service ssh : ```sudo service ssh restart```
+
+Sortez du ssh avec ```exit``` et retentez une connexion avec la commande prédédente. La connexion se fait désormais sans mot de passe avec les PublicKeys. Vous retrouverez votre VM dans le fichier .ssh/known_hosts.
 
 
 ## PARTIE 3 : Firewall
+
+La partie Firewall se fait via des règles iptables.
+Vous pouvez lister les règles existentes avec :
+
 ```
-iptables -L
+sudo iptables -L
 ```
 
-Ajouter fichier ```/etc/network/if-pre-up.d/iptables```
+Il n'y a pour l'instant aucune règles. Ajoutez donc le fichier ```sudo vim /etc/network/if-pre-up.d/iptables```
 
-Dans ce fichier : 
+Dans ce fichier ajoutez les lignes suivantes : 
 ```
 #!/bin/bash
 
@@ -104,14 +150,29 @@ iptables -I INPUT -p tcp --dport 80 -m connlimit --connlimit-above 10 --connlimi
 
 exit 0
 ```
-```chmod+x``` sur ce fichier
+
+Puis rendez ce fichier executable.
+
+```sudo chmod+x /etc/network/if-pre-up.d/iptables```
+
+Les règles iptables sont remises à zéro à chaque reboot. Ce fichier permettra au packet iptables-persistent de charger vos règles à chaque redémarrage. Modifiez le port 2222 par le port de votre ssh.
 
 
 ## PARTIE 4 : DOS
+
+Créez un fichier de log pour votre serveur Apache.
+
 ```
 sudo touch /var/log/apache2/server.log
 ```
-```vim /etc/fail2ban/jail.local```
+
+Le packet fail2ban intègre des protections contre les attaques courantes. Il suffit de les activer en créant un fichier de configuration local. Cela permet de ne pas modifier directement les jails par défaut de jail.conf.
+
+
+```sudo vim /etc/fail2ban/jail.local```
+
+Puis ajoutez les jails suivantes : 
+
 ```
 [DEFAULT]
 destemail = USER@student.le-101.fr
@@ -169,9 +230,10 @@ bantime = 300
 action = iptables[name=HTTP, port=http, protocol=tcp]
 
 ```
-Puis créer le fichier suivant :
 
-```sudo vim /etc/fail2ban/filter.d/http-get-dos.conf``` et y mettre le contenu suivant :
+Créez également le fichier suivant :
+
+```sudo vim /etc/fail2ban/filter.d/http-get-dos.conf``` avec pour contenu :
 
 ```
 [Definition]
@@ -189,46 +251,60 @@ failregex = ^<HOST> -.*"(GET|POST).*
 ignoreregex =
 ```
 
-Relancer le service fail2ban : ```sudo systemctl restart fail2ban.service```
+Relancer ensuite le service fail2ban : ```sudo systemctl restart fail2ban.service```
 
-Si pas d'erreur, tout va bien, un ```iptables -L``` liste désormais toutes les règles activées.
+Si pas d'erreur, tout va bien, un ```iptables -L``` liste désormais de nouvelles règles en plus des prédédentes.
 
 ## PARTIE 5 : scan des ports
-Fait automatiquement par le Firewall -> seul les ports ssh et web sont visibles
+
+La commande ```sudo netstat -paunt``` devrait lister les ports ouverts de votre machine.
+Assurez que seuls ceux que vous utilisez dans le projet soient ouverts.
 
 ## PARTIE 6 : services inutiles
+
 ```
-service --status-all
-
-apt remove <services inutiles>
-
 systemctl list-unit-files
 
 systemctl disable <services inutiles>
 ```
 
 ## PARTIE 7 : script d'update
+
+Créez le script :
+
 ```vim /home/USER/update_script.sh```
+
 ```
 #! /bin/bash
 apt-get update && apt-get upgrade
 ```
+
+Rendez le exécutable :
+
 ```chmod +x update_script.sh```
 
-```vim crontab``` (dans /etc) et ajouter avant le dernier #
+Puis ajoutez le dans ```sudo vim /etc/crontab```
+
 ```
 0 4	* * 1	root	/home/USER/update_script.sh  >> /var/log/update_script.log
-@reboot	root	/home/USER/update_script.sh  >> /var/log/update_script.log
+@reboot		root	/home/USER/update_script.sh  >> /var/log/update_script.log
 ```
 
 ## PARTIE 8 : Script de surveillance
 
+Créez une copie de votre crontab actuel :
+
 ```cp /etc/crontab /home/USER/tmp```
 
+Créez le template du mail que vous enverrez :
+
 ```vim /home/USER/email.txt```
-Remplir le contenu du fichier email.txt avec le message que vous souhaitez
+
+Remplir le contenu du fichier email.txt avec le message que vous souhaitez.
+Puis créez le script :
 
 ```vim /home/USER/watch_script.sh```
+
 ```
 #!/bin/bash
 cat /etc/crontab > /home/USER/new
@@ -239,25 +315,33 @@ if [ "$DIFF" != "" ]; then
 	cp /home/USER/new /home/USER/tmp
 fi
 ```
+
+Rendez-le exécutable :
+
 ```chmod +x watch_script.sh```
 
-```vim /etc/crontab``` -> ajouter avant le dernier #
+Ajoutez le ensuite à votre crontab :
+
+```sudo vim /etc/crontab```
 ```
 0  0	* * *	root	/home/USER/watch_script.sh
 ```
 
 ## PARTIE 9 : Partie web
 
-Générer une clé SSL :
+Générez une nouvelle clé SSL :
+
 ```
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/roger-skyline.com.key -out /etc/ssl/certs/roger-skyline.com.crt
 ```
-Rentrer les infos quand demandées.
+
+Rentrez les infos quand demandées.
 
 Puis : 
 ```sudo vim /etc/apache2/sites-available/default-ssl.conf```
 
-Et modifier uniquement les lignes SSL en renseignant le bon chemin des clés :
+Et modifier uniquement les lignes SSL en renseignant le bon chemin des clés (les deux lignes sous SSLEngine on) :
+
 ```
 <IfModule mod_ssl.c>
  <VirtualHost _default_:443>       
@@ -286,6 +370,7 @@ Et modifier uniquement les lignes SSL en renseignant le bon chemin des clés :
 ```
 
 Puis tester les commandes suivantes :
+
 ```
 sudo apachectl configtest
 sudo a2enmod ssl
@@ -295,18 +380,27 @@ sudo a2ensite default-ssl
 Si pas de message d'erreur, on peut redémarrer le service :
 ```sudo systemctl restart apache2.service```
 
-Dans ce fichier, modifier le document root vers /var/www/site
+Faites une copie de la page par défaut :
+```sudo cp /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/001-default.conf```
+
+Et modifiez le fichier ```sudo vim /etc/apache2/sites-available/000-default.conf```
+Changez le ServerName par ce que vous voulez et le DocumentRoot par le chemin vers votre site web.
+
+Activez ce fichier de configuration :
+
 ```
 a2dissite 000-default.conf
 a2ensite 001-site.conf
 systemctl reload apache2
 ```
 
-Le site sera accessible sur votre IP (https://192.168.56.3), c'est un certificat auto signé donc le navigateur met une alerte, c'est normal !
+Le site sera normalement accessible sur votre IP (https://192.168.56.3), c'est un certificat auto signé donc le navigateur vous mettra un avertissement avant d'y accéder.
 
-Vous pouvez mettre les fichiers de votre site dans le dossier /var/www/html !
+Vous pouvez mettre les fichiers de votre site dans le dossier /var/www/html si vous n'avez pas changé le DocumentRoot.
+
+Tips : un ```sudo chown -R /var/www/html``` peut s'avérer très pratique.
 
 
 ## PARTIE 10 : Partie deploiement
 
-```SWAG IT PUSH```
+Soyez créatifs :)
